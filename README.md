@@ -4,7 +4,14 @@
 
 ### A lightweight, cross-platform alternative to Sublime Text
 
-[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/YOUR_HANDLE)
+If you find this software useful, you can support its development:
+
+<!--START_SECTION:buy-me-a-coffee-->
+<a href="https://www.buymeacoffee.com/sacuar" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
+</a>
+<!--END_SECTION:buy-me-a-coffee-->
+<img width="2560" height="1600" alt="image" src="https://github.com/user-attachments/assets/c384d4f4-f754-4d7c-959c-f5482bde6049" />
 
 <br>
 
