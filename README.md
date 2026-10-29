@@ -6,7 +6,17 @@
 
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/YOUR_HANDLE)
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Plugins](#-plugin-support) • [Building](#-building-a-standalone-exe) • [Contributing](#-contributing)
+<br>
+
+![Lumen editor](docs/screenshots/Capture1.png)
+
+<br>
+<br>
+
+![Lumen editor](docs/screenshots/Capture.png)
+
+<br>
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Plugins](#-plugin-support) • [Building an .exe](#-building-a-standalone-exe) • [Shortcuts](#-keyboard-shortcuts)
 
 </div>
 
