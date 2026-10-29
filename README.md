@@ -80,4 +80,4 @@ If you find this software useful, you can support its development:
 ...
 
 ## License
-MIT
+Open GNU
