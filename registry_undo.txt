@@ -1,0 +1,1 @@
+python register_lumen.py --unregister
