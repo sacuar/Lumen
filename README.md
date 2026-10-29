@@ -11,7 +11,7 @@ If you find this software useful, you can support its development:
     <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174">
 </a>
 <!--END_SECTION:buy-me-a-coffee-->
-<img width="2560" height="1600" alt="image" src="https://github.com/user-attachments/assets/c384d4f4-f754-4d7c-959c-f5482bde6049" />
+
 
 <br>
 
