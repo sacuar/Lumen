@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# PyInstaller
+*.spec.bak
+build/Lumen/
+dist/Lumen/
+
+# Sublime/Lumen user data
+.lumen/
+
+# Icons — the SVG source is tracked, the .ico is a build artifact
+# lumen.ico     (uncomment if you don't want to commit the .ico)
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+lumen-error.log

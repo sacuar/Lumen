@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lumen</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="app">
+  <div id="menubar"></div>
+  <div id="toolbar">
+    <span id="title">untitled</span>
+    <span id="status"></span>
+  </div>
+  <div id="main">
+    <aside id="sidebar">
+      <div id="sidebar-header">
+        <span id="folder-name">No folder</span>
+        <button id="open-folder" title="Open folder">…</button>
+      </div>
+      <ul id="filetree"></ul>
+    </aside>
+    <div id="editor-area">
+      <div id="tabs"></div>
+      <div id="editor-container">
+        <div id="gutter"></div>
+        <div id="editor-wrap">
+          <pre id="highlight"><code></code></pre>
+          <textarea id="input" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="findbar" class="hidden">
+    <input id="find-input" placeholder="Find">
+    <input id="replace-input" placeholder="Replace">
+    <button id="find-next">Next</button>
+    <button id="find-prev">Prev</button>
+    <button id="replace-one">Replace</button>
+    <button id="replace-all">Replace All</button>
+    <button id="find-close">✕</button>
+  </div>
+  <div id="console" class="hidden">
+    <div id="console-header">
+      <span>Console</span>
+      <button id="console-close">✕</button>
+    </div>
+    <pre id="console-output"></pre>
+  </div>
+  <div id="palette" class="hidden">
+    <input id="palette-input" placeholder="Type a command…">
+    <ul id="palette-list"></ul>
+  </div>
+  <div id="goto" class="hidden">
+    <input id="goto-input" placeholder="Go to line…">
+  </div>
+</div>
+<script src="/api.js"></script>
+<script src="/editor.js"></script>
+<script src="/menus.js"></script>
+<script src="/palette.js"></script>
+<script src="/find.js"></script>
+<script src="/sidebar.js"></script>
+<script src="/console.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
