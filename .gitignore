@@ -1,7 +1,23 @@
-﻿__pycache__/
+# Python caches and local environments
+__pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Builds and generated files
 build/
 dist/
-.venv/
+*.spec.bak
+
+# Lumen user data, editors and logs
 .lumen/
+.vscode/
+.idea/
 *.log
+Thumbs.db
+.DS_Store
