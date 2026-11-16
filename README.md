@@ -110,7 +110,7 @@ A good starting point is the [development roadmap](ROADMAP.md), the [open issues
 3. Test the affected feature and explain what changed in your pull request.
 4. Follow the [contribution guide](CONTRIBUTING.md) and [pull request template](.github/PULL_REQUEST_TEMPLATE.md).
 
-**Licensing note:** The repository's `LICENSE` file is currently empty, and earlier README files made conflicting licence claims. **No licence has been selected or granted through this README.** Before submitting code, review the [licensing discussion issue](https://github.com/sacuar/Lumen/issues) and request clarification from the maintainer. Do not assume the project is MIT-licensed or use the source beyond applicable rights without permission.
+**Licensing note:** The repository's `LICENSE` file is currently empty, and earlier README files made conflicting licence claims. **No licence has been selected or granted through this README.** Before submitting code, review the [licensing status](LICENSING.md) and request clarification from the maintainer. Do not assume the project is MIT-licensed or use the source beyond applicable rights without permission.
 
 ## Project structure
 
