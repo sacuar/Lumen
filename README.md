@@ -1,30 +1,42 @@
 <div align="center">
 
-<img src="assets/lumen-notebook.svg" width="100" alt="Lumen notebook icon">
+![Lumen banner](assets/brand-cover.svg)
 
 # Lumen
 
-**A lightweight text and code editor inspired by the speed and workflow of Sublime Text.**
+**A lightweight keyboard-first editor for text and code, built for focused local work.**
 
-Early-stage desktop editor • Python backend • HTML/CSS/JavaScript interface
+[![Windows](https://img.shields.io/badge/platform-Windows%2010%2F11-2563eb)](https://github.com/sacuar/Lumen#install--try) [![Latest release](https://img.shields.io/github/v/release/sacuar/Lumen?label=latest%20release)](https://github.com/sacuar/Lumen/releases/latest) [![Issues](https://img.shields.io/github/issues/sacuar/Lumen)](https://github.com/sacuar/Lumen/issues)
 
-**Contributors welcome — help make Lumen faster, more reliable and easier to extend.**
-
-[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-2ea44f)](CONTRIBUTING.md)
-[![Project status](https://img.shields.io/badge/status-early%20development-blue)](ROADMAP.md)
-[![GitHub issues](https://img.shields.io/github/issues/sacuar/Lumen)](https://github.com/sacuar/Lumen/issues)
-
-[**Get started**](#getting-started) · [**Contribute**](#contributing) · [**Roadmap**](ROADMAP.md) · [**Report a bug**](https://github.com/sacuar/Lumen/issues/new/choose) · [**Windows release**](https://github.com/sacuar/Lumen/releases)
+**[DOWNLOAD / RELEASES](https://github.com/sacuar/Lumen/releases)** · **[VIEW SOURCE](https://github.com/sacuar/Lumen)** · [More SACUAR apps](https://github.com/sacuar)
 
 </div>
 
-## Screenshots
+## Why use Lumen?
 
-![Lumen editor — screenshot one](docs/screenshots/Capture1.png)
+- Edit multiple files with tabs, search, replace, syntax highlighting and a command palette.
+- Browse project folders and use built-in shortcuts for everyday editing.
+- Run a Python-backed local editor in the browser or through a Windows desktop launcher.
 
-![Lumen editor — screenshot two](docs/screenshots/Capture.png)
+## Install / try
 
-*Screenshots from the repository. The interface may change during development.*
+Open **[GitHub Releases](https://github.com/sacuar/Lumen/releases)**, choose the latest suitable Windows asset, review its release notes and known limitations, and follow the installer instructions. If no verified installer is available, use the documented source-build instructions below. Download only from the official project release page.
+
+**Early development:** Lumen is not a complete Sublime Text replacement. Its Windows runtime, plugin compatibility and installer require further testing.
+
+**Licence:** [Clarification is pending](LICENSING.md). The existing LICENSE file is empty; no open-source licence is granted by this README.
+
+## Screenshots and first look
+
+Real interface captures are available in the [Screenshots section](#screenshots) below. The banner above is branding artwork, not a product screenshot.
+
+## Get involved
+
+[Roadmap](ROADMAP.md) · [Contribute](CONTRIBUTING.md) · [Report issues](https://github.com/sacuar/Lumen/issues/new). Please report your Windows version, application version and steps to reproduce. Screenshots of reproducible issues help.
+
+---
+
+## Detailed documentation
 
 ## What is Lumen?
 
