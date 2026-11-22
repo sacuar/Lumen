@@ -33,8 +33,11 @@ Name: "fileassoc"; Description: "Register Lumen in Open with and Default Apps"
 Name: "contextmenu"; Description: "Add Open with Lumen and Open folder in Lumen to Explorer"
 Name: "defaultapps"; Description: "Open Windows Default Apps after installation"; Flags: unchecked
 [Files]
+Source: "..\..\maintenance.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\maintenance.ps1"; DestName: "Setup-Maintenance.ps1"; Flags: dontcopy
 Source: "..\..\dist\Lumen\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
+Name: "{autoprograms}\Lumen maintenance"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\maintenance.ps1"" -App Lumen -ProtectPath ""{app}"""; IconFilename: "{app}\Lumen.exe"
 Name: "{autoprograms}\Lumen"; Filename: "{app}\Lumen.exe"; IconFilename: "{app}\Lumen.exe"
 Name: "{autodesktop}\Lumen"; Filename: "{app}\Lumen.exe"; Tasks: desktopicon
 [Registry]
@@ -88,3 +91,20 @@ Root: HKCU; Subkey: "Software\Classes\Directory\Background\shell\LumenEdit\comma
 [Run]
 Filename: "ms-settings:defaultapps"; Description: "Choose Lumen in Windows Default Apps"; Flags: shellexec postinstall skipifsilent unchecked; Tasks: defaultapps
 Filename: "{app}\Lumen.exe"; Description: "Launch Lumen"; Flags: nowait postinstall skipifsilent
+
+[Code]
+var MaintenanceButton: TNewButton;
+procedure OpenMaintenance(Sender: TObject);
+var ResultCode: Integer;
+begin
+  ExtractTemporaryFile('Setup-Maintenance.ps1');
+  if not Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{tmp}\Setup-Maintenance.ps1') + '" -App Lumen -ProtectPath "' + WizardDirValue + '"', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode) then
+    MsgBox('Maintenance tool could not be opened.', mbError, MB_OK);
+end;
+procedure InitializeWizard;
+var Page: TWizardPage; Info: TNewStaticText;
+begin
+  Page := CreateCustomPage(wpSelectDir, 'Review previous builds', 'Optional maintenance before installation');
+  Info := TNewStaticText.Create(Page); Info.Parent := Page.Surface; Info.Width := Page.SurfaceWidth; Info.WordWrap := True; Info.Caption := 'Find old builds, running copies and startup registrations. Nothing is removed automatically. Review matches and keep your project files and settings.';
+  MaintenanceButton := TNewButton.Create(Page); MaintenanceButton.Parent := Page.Surface; MaintenanceButton.Top := ScaleY(56); MaintenanceButton.Width := ScaleX(235); MaintenanceButton.Caption := 'Scan and review old builds...'; MaintenanceButton.OnClick := @OpenMaintenance;
+end;
