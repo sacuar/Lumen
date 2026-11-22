@@ -2,16 +2,16 @@ const API = {
   async post(path, data) {
     const r = await fetch(path, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Lumen-Session": document.querySelector("meta[name=lumen-session]").content },
       body: JSON.stringify(data || {}),
     });
     return r.json();
   },
   boot: () => API.post("/api/boot"),
   read: (path) => API.post("/api/fs/read", { path }),
-  write: (path, content) => API.post("/api/fs/write", { path, content }),
+  write: (path, content, encoding, eol) => API.post("/api/fs/write", { path, content, encoding, eol }),
   list: (path) => API.post("/api/fs/list", { path }),
-  build: (path, content) => API.post("/api/build", { path, content }),
+  build: (path, content, name, python) => API.post("/api/build", { path, content, name, python }),
   installPlugin: (path) => API.post("/api/plugin/install", { path }),
   installPluginSource: (name, content) =>
     API.post("/api/plugin/install", { name, content }),

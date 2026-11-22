@@ -1,5 +1,8 @@
 """Lumen HTTP server. Stdlib only."""
 import json
+import secrets, hmac
+from pathlib import Path
+from lumen import __version__, preview, release
 import os
 import sys
 import threading
@@ -19,10 +22,12 @@ UI_DIR = os.path.join(ROOT, "ui")
 
 PLUGINS = PluginManager()
 BUILD_LOCK = threading.Lock()
+SESSION_TOKEN = secrets.token_urlsafe(32)
+INITIAL_PATH = ''
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "Lumen/0.3"
+    server_version = "Lumen/"+__version__
 
     def log_message(self, fmt, *args):
         pass
@@ -63,8 +68,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         p = urlparse(self.path).path
         if p in ("/", "/index.html"):
-            return self._serve_file(os.path.join(UI_DIR, "index.html"), "text/html")
-        static = os.path.join(UI_DIR, p.lstrip("/"))
+            if self.headers.get("Host") != f"127.0.0.1:{self.server.server_port}":return self._err("Invalid host",403)
+            body=Path(UI_DIR,"index.html").read_text(encoding="utf-8").replace("__LUMEN_SESSION__",SESSION_TOKEN).encode()
+            self.send_response(200);self.send_header("Content-Type","text/html; charset=utf-8");self.send_header("Cache-Control","no-store");self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body);return
+        static = os.path.realpath(os.path.join(UI_DIR, p.lstrip("/")))
+        if os.path.commonpath([os.path.realpath(UI_DIR),static])!=os.path.realpath(UI_DIR):return self._err("not found",404)
         if os.path.isfile(static):
             ctype = "text/css" if p.endswith(".css") else \
                     "application/javascript" if p.endswith(".js") else \
@@ -75,7 +83,12 @@ class Handler(BaseHTTPRequestHandler):
     # ---------- POST ----------
     def do_POST(self):
         p = urlparse(self.path).path
+        if self.headers.get("Host") != f"127.0.0.1:{self.server.server_port}" or not hmac.compare_digest(self.headers.get("X-Lumen-Session",""),SESSION_TOKEN):return self._err("Forbidden",403)
+        if self.headers.get("Origin") not in (None,f"http://127.0.0.1:{self.server.server_port}"):return self._err("Forbidden",403)
+        if int(self.headers.get("Content-Length","0"))>24*1024*1024:return self._err("Request too large",413)
         routes = {
+            "/api/preview": self.preview_file,
+            "/api/update": self.update_check,
             "/api/boot": self.boot,
             "/api/fs/read": self.fs_read,
             "/api/fs/write": self.fs_write,
@@ -100,7 +113,7 @@ class Handler(BaseHTTPRequestHandler):
     # ---------- endpoints ----------
     def boot(self, _):
         self._json({
-            "version": "0.3.0",
+            "version": __version__, "initial_path": INITIAL_PATH, "initial_dir": os.path.isdir(INITIAL_PATH),
             "menus": menus.MENUS,
             "keymaps": keymaps.KEYMAPS,
             "syntaxes": syntax.list_syntaxes(),
@@ -113,19 +126,33 @@ class Handler(BaseHTTPRequestHandler):
         path = data.get("path")
         if not path or not os.path.isfile(path):
             return self._err("no such file")
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
-            content = f.read()
+        if preview.supports(path):return self._json({"preview":True})
+        if os.path.getsize(path)>16*1024*1024:return self._err("Text file exceeds 16 MB")
+        raw=Path(path).read_bytes()
+        if b"\x00" in raw and not raw.startswith((b"\xff\xfe",b"\xfe\xff")):return self._err("Binary file cannot be edited")
+        encoding="utf-16" if raw.startswith((b"\xff\xfe",b"\xfe\xff")) else "utf-8-sig" if raw.startswith(b"\xef\xbb\xbf") else "utf-8"
+        try:content=raw.decode(encoding)
+        except UnicodeError:return self._err("Unsupported text encoding; file not modified")
         self._json({"path": path, "content": content,
-                    "syntax": syntax.guess(path)})
+                    "syntax": syntax.guess(path),"encoding":encoding,"eol":"\r\n" if "\r\n" in content else "\n"})
 
     def fs_write(self, data):
         path = data.get("path")
         content = data.get("content", "")
         if not path:
             return self._err("no path")
-        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(content)
+        if preview.supports(path):return self._err("Preview files are read-only")
+        target=Path(path)
+        if target.exists():
+            raw=target.read_bytes()
+            if b"\x00" in raw and not raw.startswith((b"\xff\xfe",b"\xfe\xff")):return self._err("Refusing to overwrite binary file")
+            try:raw.decode("utf-16" if raw.startswith((b"\xff\xfe",b"\xfe\xff")) else "utf-8-sig")
+            except UnicodeError:return self._err("Refusing to overwrite unsupported encoding")
+        encoding=data.get("encoding","utf-8")
+        if encoding not in ("utf-8","utf-8-sig","utf-16"):return self._err("Unsupported encoding")
+        eol=data.get("eol","\n")
+        if eol not in ("\n","\r\n"):return self._err("Invalid newline")
+        target.write_bytes(content.replace("\r\n","\n").replace("\n",eol).encode(encoding))
         self._json({"ok": True, "path": path})
 
     def fs_list(self, data):
@@ -150,9 +177,15 @@ class Handler(BaseHTTPRequestHandler):
     def build(self, data):
         path = data.get("path") or ""
         content = data.get("content", "")
-        result = builds.run(path, content)
+        with BUILD_LOCK:result = builds.run(path, content, data.get("name"), data.get("python","Auto"))
         PLUGINS.broadcast("on_build_finished", result)
         self._json(result)
+
+    def preview_file(self,data):
+        self._json(preview.render(data.get("path",""),data.get("page",0)))
+
+    def update_check(self,data):
+        self._json(release.check())
 
     def plugin_install(self, data):
         content = data.get("content")
@@ -202,7 +235,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def run_server(host=HOST, port=PORT):
-    PLUGINS.load_all()
     httpd = ThreadingHTTPServer((host, port), Handler)
     print(f"Lumen running at http://{host}:{port}")
     httpd.serve_forever()

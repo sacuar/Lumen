@@ -1,5 +1,6 @@
 const Lumen = {
   boot: null,
+  encoding:'utf-8', eol:'\n',
   editor: null,
   currentPath: null,
   dirty: false,
@@ -25,12 +26,15 @@ const Lumen = {
     Palette.init((cmd, args) => this.dispatch(cmd, args));
     Find.init(this.editor);
     Sidebar.init((path) => this.openFile(path));
-    Console.init();
+    Console.init(); Preview.init(); this.initSettings();
+    document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>this.dispatch(b.dataset.cmd,{}));
 
     this._buildPaletteItems();
     this._bindKeys();
     this._updateTitle();
     this.editor.focus();
+    if(this.boot.initial_path){if(this.boot.initial_dir)await Sidebar.load(this.boot.initial_path);else await this.openFile(this.boot.initial_path);}
+    if(localStorage.getItem('updates')!=='off')this.checkUpdates(true);
   },
 
   _buildPaletteItems() {
@@ -101,14 +105,20 @@ const Lumen = {
       case "install_plugin": return this.installPluginDialog();
       case "list_plugins": return this.listPlugins();
       case "run_plugin_command": return this.runPluginCommand(args.name);
+      case "settings": document.getElementById("settings").showModal();return;
+      case "check_updates":return this.checkUpdates(false);
+      case "cut":case "copy":case "paste":return document.execCommand(command);
+      case "select_all":this.editor.input.select();return;
       case "about":
-        alert("Lumen 0.3.0 — a Sublime Text alternative.");
+        alert("Lumen "+this.boot.version+" — text and code editor.");
         return;
     }
   },
 
   // -------- files --------
   newFile() {
+    if(this.dirty&&!confirm("Discard unsaved changes?"))return;
+    this.encoding="utf-8";this.eol="\n";Preview.close();
     this.editor.value = "";
     this.editor.setSyntax("Plain");
     this.currentPath = null;
@@ -129,7 +139,11 @@ const Lumen = {
   },
 
   async openFile(path) {
+    if(this.currentPath===path&&!Preview.path)return;
     const res = await API.read(path);
+    if(res.preview)return Preview.show(path);
+    if(this.dirty&&!confirm("Discard unsaved changes?"))return;
+    Preview.close();this.encoding=res.encoding||"utf-8";this.eol=res.eol||"\n";
     if (res.error) return alert(res.error);
     this.editor.value = res.content;
     this.editor.setSyntax(res.syntax || "Plain");
@@ -141,7 +155,7 @@ const Lumen = {
 
   async save() {
     if (!this.currentPath) return this.saveAs();
-    await API.write(this.currentPath, this.editor.value);
+    const r=await API.write(this.currentPath,this.editor.value,this.encoding,this.eol);if(r.error||!r.ok){alert(r.error||"Save failed");return false;}
     this.dirty = false;
     this._updateTitle();
   },
@@ -159,7 +173,7 @@ const Lumen = {
   },
 
   async _doSaveAs(path) {
-    await API.write(path, this.editor.value);
+    const r=await API.write(path,this.editor.value,this.encoding,this.eol);if(r.error||!r.ok){alert(r.error||"Save failed");return false;}
     this.currentPath = path;
     this.dirty = false;
     this._updateTitle();
@@ -167,7 +181,6 @@ const Lumen = {
   },
 
   closeFile() {
-    if (this.dirty && !confirm("Discard unsaved changes?")) return;
     this.newFile();
   },
 
@@ -188,6 +201,8 @@ const Lumen = {
       close.textContent = "✕";
       close.onclick = (e) => {
         e.stopPropagation();
+        if(this.currentPath===p&&this.dirty&&!confirm("Discard unsaved changes?"))return;
+        if(this.currentPath===p)this.dirty=false;
         this.tabs.splice(i, 1);
         if (this.currentPath === p) this.newFile();
         this._renderTabs();
@@ -202,7 +217,9 @@ const Lumen = {
   async build() {
     Console.show();
     Console.log(`[build] ${this.currentPath || "untitled"}`);
-    const res = await API.build(this.currentPath || "", this.editor.value);
+    if(!this.currentPath){Console.log("Save your file before building.");return;}
+    if(this.dirty){Console.log("Save changes before building.");return;}
+    const res = await API.build(this.currentPath,this.editor.value,undefined,localStorage.getItem("python")||"Auto");
     Console.log(res.output || "(no output)");
     Console.log(`[exit ${res.code}]`);
   },
@@ -210,7 +227,8 @@ const Lumen = {
     const name = prompt("Build system (Python/Node/Make):", "Python");
     if (!name) return;
     Console.show();
-    const res = await API.build(this.currentPath || "", this.editor.value);
+    if(!this.currentPath||this.dirty){Console.log("Save before building.");return;}
+    const res=await API.build(this.currentPath,this.editor.value,name,localStorage.getItem("python")||"Auto");
     Console.log(res.output || "(no output)");
   },
 
@@ -265,6 +283,7 @@ const Lumen = {
   },
 
   async _installPluginFromPath(path) {
+    if(!confirm("This Python plugin can execute code on your computer. Only install trusted code. Continue?"))return;
     const r = await API.installPlugin(path);
     Console.show();
     Console.log(r.message || JSON.stringify(r));
@@ -285,6 +304,20 @@ const Lumen = {
     Console.log(JSON.stringify(res, null, 2));
   },
 
+  initSettings(){
+    const p=document.getElementById("python-version"), f=document.getElementById("font-size"),u=document.getElementById("update-check");
+    const apply=()=>{p.value=localStorage.getItem("python")||"Auto";f.value=localStorage.getItem("font")||13;u.checked=localStorage.getItem("updates")!=="off";document.documentElement.style.setProperty("--editor-size",f.value+"px");};
+    p.onchange=()=>localStorage.setItem("python",p.value);
+    f.onchange=()=>{localStorage.setItem("font",Math.min(28,Math.max(10,Number(f.value)||13)));apply();this.editor._refresh();};
+    u.onchange=()=>localStorage.setItem("updates",u.checked?"on":"off");
+    document.getElementById("settings-close").onclick=()=>document.getElementById("settings").close();
+    document.getElementById("settings-reset").onclick=()=>{for(const k of ["python","font","updates"])localStorage.removeItem(k);apply();};
+    apply();
+    window.addEventListener("beforeunload",e=>{if(this.dirty){e.preventDefault();e.returnValue="";}});
+  },
+  async checkUpdates(silent){
+    try{const r=await API.post("/api/update");if(r.error)throw Error(r.error);if(r.available){if(confirm("Lumen "+r.version+" is available. Open official GitHub release?"))window.open(r.url,"_blank","noopener");}else if(!silent)alert("No newer numbered release found.");}catch(e){if(!silent)alert("Update check failed: "+e.message);}
+  },
   _updateTitle() {
     const p = this.currentPath || "untitled";
     document.getElementById("title").textContent = p + (this.dirty ? " •" : "");

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="lumen-session" content="__LUMEN_SESSION__">
 <title>Lumen</title>
 <link rel="stylesheet" href="/style.css">
 </head>
@@ -9,7 +10,7 @@
 <div id="app">
   <div id="menubar"></div>
   <div id="toolbar">
-    <span id="title">untitled</span>
+    <div id="quick-tools"><button data-cmd="new_file" title="New file" aria-label="New file">＋</button><button data-cmd="open_file" title="Open file">Open</button><button data-cmd="save" title="Save file">Save</button><button data-cmd="find" title="Find">Find</button><button data-cmd="build" title="Run build">▶ Run</button><button data-cmd="settings" title="Settings">⚙</button></div><span id="title">untitled</span>
     <span id="status"></span>
   </div>
   <div id="main">
@@ -30,7 +31,9 @@
         </div>
       </div>
     </div>
+    <aside id="preview-panel" hidden><div id="preview-header"><span id="preview-title">Preview</span><button id="preview-close" aria-label="Close preview">✕</button></div><div id="preview-content"></div><div id="preview-nav"><button id="preview-prev">Previous</button><span id="preview-count"></span><button id="preview-next">Next</button></div></aside>
   </div>
+  <dialog id="settings"><h2>Lumen preferences</h2><label>Python interpreter <select id="python-version"><option>Auto</option><option>3.12</option><option>3.14</option></select></label><label>Editor font size <input type="number" id="font-size" min="10" max="28" value="13"></label><label><input type="checkbox" id="update-check" checked> Check for releases on startup</label><button id="settings-close">Done</button><button id="settings-reset">Restore defaults</button></dialog>
   <div id="findbar" class="hidden">
     <input id="find-input" placeholder="Find">
     <input id="replace-input" placeholder="Replace">
@@ -62,6 +65,7 @@
 <script src="/find.js"></script>
 <script src="/sidebar.js"></script>
 <script src="/console.js"></script>
+<script src="/preview.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 import os
 import subprocess
 import sys
+from lumen.runtime import python_command
 
 BUILDS = {
     "Python": {
@@ -28,11 +29,12 @@ def guess(path):
             return name
     return None
 
-def run(path, content, name=None):
+def run(path, content, name=None, python="Auto"):
     path = path or ""
     name = name or guess(path)
     if not name:
         return {"ok": False, "output": "No build system for this file type.", "code": -1}
+    if name not in BUILDS:return {"ok":False,"output":"Unknown build system","code":-1}
     b = BUILDS[name]
     # write to a temp file if path is empty
     tmp = None
@@ -44,13 +46,16 @@ def run(path, content, name=None):
             f.write(content)
         path = tmp
     try:
+        cmd=python_command(python)+["-u","{file}"] if name=="Python" else b["cmd"]
         proc = subprocess.run(
-            [c.replace("{file}", path) for c in b["cmd"]],
+            [c.replace("{file}", path) for c in cmd],
             cwd=os.path.dirname(os.path.abspath(path)) or None,
             capture_output=True, text=True, timeout=60,
         )
         out = (proc.stdout or "") + (proc.stderr or "")
         return {"ok": proc.returncode == 0, "output": out, "code": proc.returncode, "build": name}
+    except RuntimeError as exc:
+        return {"ok":False,"output":str(exc),"code":-1}
     except FileNotFoundError:
         return {"ok": False, "output": f"Build command not found: {b['cmd'][0]}", "code": -1}
     except subprocess.TimeoutExpired:

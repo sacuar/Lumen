@@ -42,6 +42,7 @@ class PluginManager:
         return self.install_from_source(name, src)
 
     def install_from_source(self, name, source):
+        if not name or not name.replace("_","").replace("-","").isalnum():return False,"Invalid plugin name"
         modname = f"lumen_plugin_{name}"
         mod = types.ModuleType(modname)
         mod.__dict__["__file__"] = os.path.join(PLUGIN_DIR, name + ".py")

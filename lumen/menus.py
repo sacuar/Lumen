@@ -42,11 +42,13 @@ MENUS = [
         {"label": "Build", "command": "build", "keys": ["Ctrl+B"]},
         {"label": "Build With…", "command": "build_with"},
         {"label": "-"},
+        {"label": "Settings…","command":"settings"},
         {"label": "Install Plugin…", "command": "install_plugin"},
         {"label": "List Plugins", "command": "list_plugins"},
         {"label": "Run Plugin Command…", "command": "run_plugin_command"},
     ]},
     {"label": "Help", "items": [
+        {"label": "Check for updates…","command":"check_updates"},
         {"label": "About Lumen", "command": "about"},
     ]},
 ]

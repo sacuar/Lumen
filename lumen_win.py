@@ -1,54 +1,21 @@
-"""Launch Lumen as a native desktop window (no browser chrome)."""
-import os
-import sys
-import threading
-import time
-import urllib.request
-from urllib.parse import quote
-
-from lumen.server import run_server, HOST, PORT
-
-try:
-    import webview
-except ImportError:
-    print("pywebview not installed. Run: pip install pywebview")
-    sys.exit(1)
-
-URL = f"http://{HOST}:{PORT}"
-
-
-def _start():
-    run_server(HOST, PORT)
-
-
-def _wait():
-    for _ in range(60):
-        try:
-            urllib.request.urlopen(URL, timeout=0.2)
-            return True
-        except Exception:
-            time.sleep(0.1)
-    return False
-
-
+"""Native window with a private per-instance local HTTP service."""
+import os,sys,threading
+from http.server import ThreadingHTTPServer
+from lumen import server,__version__
 def main():
-    initial_file = sys.argv[1] if len(sys.argv) > 1 else ""
-    if initial_file and not os.path.isfile(initial_file):
-        initial_file = ""
-
-    t = threading.Thread(target=_start, daemon=True)
-    t.start()
-    if not _wait():
-        print("server failed to start")
-        sys.exit(1)
-
-    start_url = f"{URL}/?open={quote(initial_file)}" if initial_file else URL
-
-    webview.create_window(
-        "Lumen", start_url, width=1280, height=800, min_size=(800, 500),
-    )
-    webview.start()
-
-
-if __name__ == "__main__":
-    main()
+    if "--smoke-test" in sys.argv:
+        from lumen import preview,runtime
+        assert os.path.isfile(os.path.join(server.UI_DIR,"index.html"))
+        import webview,PIL,pypdfium2,docx
+        return
+    import webview
+    if sys.platform=="win32":
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("sacuar.Lumen.Editor")
+    if len(sys.argv)>1 and os.path.exists(sys.argv[1]):server.INITIAL_PATH=os.path.abspath(sys.argv[1])
+    httpd=ThreadingHTTPServer((server.HOST,0),server.Handler)
+    threading.Thread(target=httpd.serve_forever,daemon=True).start()
+    window=webview.create_window("Lumen",f"http://127.0.0.1:{httpd.server_port}",width=1280,height=800,min_size=(800,500),confirm_close=True)
+    try:webview.start(gui="edgechromium" if sys.platform=="win32" else None)
+    finally:httpd.shutdown();httpd.server_close()
+if __name__=="__main__":main()

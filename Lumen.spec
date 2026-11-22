@@ -36,7 +36,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -44,7 +44,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     version='version_info.txt',
-    icon=['lumen.ico'],
+    icon=['assets/lumen.ico'],
 )
 coll = COLLECT(
     exe,
