@@ -1,31 +1,23 @@
 @echo off
 setlocal
-
-if not exist "lumen.ico" (
-    echo WARNING: lumen.ico not found. The .exe will use PyInstaller's default icon.
-    set ICON_FLAG=
-) else (
-    set ICON_FLAG=--icon "lumen.ico"
+cd /d "%~dp0"
+call select_python.bat %1 || goto fail
+"%LUMEN_EXE%" -m pip install -r requirements-windows.txt || goto fail
+"%LUMEN_EXE%" tools\build_brand.py || goto fail
+"%LUMEN_EXE%" -m unittest discover -s tests -v || goto fail
+"%LUMEN_EXE%" -m PyInstaller --clean --noconfirm Lumen.spec || goto fail
+set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
+if not exist "%ISCC%" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
+if not exist "%ISCC%" (
+ echo Install Inno Setup 6 from https://jrsoftware.org/isdl.php
+ goto fail
 )
-
-python -m pip install --upgrade pip
-python -m pip install pywebview pyinstaller
-
-pyinstaller --noconfirm --clean --windowed --name Lumen ^
-  %ICON_FLAG% ^
-  --add-data "lumen;lumen" ^
-  --add-data "ui;ui" ^
-  --add-data "sublime_shim;sublime_shim" ^
-  --version-file version_info.txt ^
-  lumen_win.py
-
-echo.
-echo Built: dist\Lumen\Lumen.exe
-echo.
-echo Next steps:
-echo   1) Copy lumen.ico next to Lumen.exe if you haven't already
-echo   2) Run:  python register_lumen.py "dist\Lumen\Lumen.exe"
-echo   3) Right-click a .txt / .php / .html / .py file and pick
-echo      "Open with" -^> "Choose another app" -^> Lumen -^> Always
-echo.
+for /f "delims=" %%V in ('"%LUMEN_EXE%" -c "from lumen import __version__;print(__version__)"') do set "VER=%%V"
+"%ISCC%" /DAppVersion=%VER% packaging\windows\Lumen.iss || goto fail
+echo Installer: installer\Lumen-%VER%-Setup-x64.exe
 pause
+exit /b 0
+:fail
+echo Build failed.
+pause
+exit /b 1
