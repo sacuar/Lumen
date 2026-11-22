@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⚡ Lumen
+<img src="assets/lumen-notebook.svg" width="100" alt="Lumen notebook icon">
+
+# Lumen
 
 **A lightweight text and code editor inspired by the speed and workflow of Sublime Text.**
 
@@ -12,7 +14,7 @@ Early-stage desktop editor • Python backend • HTML/CSS/JavaScript interface
 [![Project status](https://img.shields.io/badge/status-early%20development-blue)](ROADMAP.md)
 [![GitHub issues](https://img.shields.io/github/issues/sacuar/Lumen)](https://github.com/sacuar/Lumen/issues)
 
-[**Get started**](#getting-started) · [**Contribute**](#contributing) · [**Roadmap**](ROADMAP.md) · [**Report a bug**](https://github.com/sacuar/Lumen/issues/new/choose) · [**Windows release**](https://github.com/sacuar/Lumen/releases/tag/smart_text_editor)
+[**Get started**](#getting-started) · [**Contribute**](#contributing) · [**Roadmap**](ROADMAP.md) · [**Report a bug**](https://github.com/sacuar/Lumen/issues/new/choose) · [**Windows release**](https://github.com/sacuar/Lumen/releases)
 
 </div>
 
@@ -75,6 +77,21 @@ The native window launcher and Windows build are most relevant to Windows users.
 An older Windows executable is available in the [Lumen release](https://github.com/sacuar/Lumen/releases/tag/smart_text_editor) (`Lumen_V1.1.exe`). **It is an existing release, not a newly tested build.** Please report startup or packaging problems.
 
 To package from source on Windows, review `build_windows.bat` and `Lumen.spec`. The build script installs `pywebview` and `PyInstaller`, then builds `dist/Lumen/Lumen.exe`.
+
+## Windows 1.2.0 edition
+
+The Windows installer bundles the Python runtime and editor dependencies. WebView2 Runtime is required (normally already installed on Windows 11). No separate Python installation is required for editing or previews.
+
+- Explorer: **Open with Lumen**, **Open folder in Lumen**.
+- Windows Settings → Apps → Default apps → Lumen: select .txt and other text extensions yourself. The installer does not replace Notepad.exe or bypass Windows user choice.
+- Read-only PDF, raster image and DOCX previews.
+- Settings → Python interpreter: Auto (3.12 first, then 3.14), 3.12, or 3.14 for executing Python scripts. Script execution requires that interpreter locally.
+- Source: run `run_windows.bat auto` or `run_windows.bat 3.14`.
+- Installer build: run `build_windows.bat auto`, `build_windows.bat 3.12`, or `build_windows.bat 3.14` (requires Inno Setup 6). Separate virtual environments avoid mixing Python versions.
+- The CI release uses Python 3.12, with a separate 3.14 compatibility test. Build and installation status are shown in Actions.
+- Release checks notify you of a newer version and open its official release page; no unattended installation.
+
+Existing screenshots below/above show the earlier editor interface. Windows runtime validation remains necessary.
 
 ## Keyboard shortcuts
 

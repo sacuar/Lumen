@@ -1,51 +1,75 @@
-name: Build Lumen for Windows
-
+name: Build Lumen Windows installer
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - 'lumen/**'
-      - 'ui/**'
-      - 'sublime_shim/**'
-      - 'lumen_win.py'
-      - 'Lumen.spec'
-      - 'build_windows.bat'
       - '.github/workflows/build-windows.yml'
-
+      - 'lumen/__init__.py'
+    tags: ['v*']
+permissions:
+  contents: read
 jobs:
-  windows:
+  compatibility:
     runs-on: windows-2022
+    strategy:
+      matrix:
+        python: ['3.12','3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: x64
+      - run: python -m pip install -r requirements-windows.txt
+      - run: python -m compileall -q lumen lumen_win.py
+      - run: python -m unittest discover -s tests -v
+      - run: python lumen_win.py --smoke-test
+  installer:
+    needs: compatibility
+    runs-on: windows-2022
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          architecture: 'x64'
-      - name: Install build dependencies
+          architecture: x64
+      - run: python -m pip install -r requirements-windows.txt
+      - run: python tools/build_brand.py
+      - run: python -m PyInstaller --clean --noconfirm Lumen.spec
+      - run: choco install innosetup -y --no-progress
+      - name: Build and test installer
         shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install "pyinstaller>=6.10,<7" pywebview
-      - name: Build full application directory
-        shell: pwsh
-        run: |
-          python -m PyInstaller --clean --noconfirm Lumen.spec
-      - name: Check packaged runtime and resources
-        shell: pwsh
-        run: |
-          $root = 'dist/Lumen'
-          if (!(Test-Path "$root/Lumen.exe")) { throw 'Lumen.exe not found' }
-          if (!(Test-Path "$root/_internal/python312.dll")) { throw 'Bundled Python runtime DLL is missing' }
-          if (!(Test-Path "$root/_internal/ui")) { throw 'UI assets missing' }
-          if (!(Test-Path "$root/_internal/sublime_shim")) { throw 'Plugin shim missing' }
-          Write-Host 'Validated executable, Python DLL and application assets.'
-      - name: Create distributable ZIP containing all files
-        shell: pwsh
-        run: |
-          Compress-Archive -Path 'dist/Lumen' -DestinationPath 'Lumen-Windows-x64.zip' -Force
+          $v=python -c "from lumen import __version__;print(__version__)"
+          $iscc="${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) { $iscc="$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
+          & $iscc "/DAppVersion=$v" packaging/windows/Lumen.iss
+          if ($LASTEXITCODE -ne 0) { throw 'Installer compilation failed' }
+          $exe=Get-Item "installer/Lumen-$v-Setup-x64.exe"
+          $dir=Join-Path $env:RUNNER_TEMP 'LumenInstall'
+          $p=Start-Process $exe.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/DIR=`"$dir`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw 'Install failed' }
+          $p=Start-Process "$dir/Lumen.exe" -ArgumentList '--smoke-test' -PassThru
+          if (!$p.WaitForExit(30000)) { $p.Kill(); throw 'Smoke test timeout' }
+          if ($p.ExitCode -ne 0) { throw 'Installed app test failed' }
+          "$((Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower())  $($exe.Name)" | Set-Content -Encoding ascii "$($exe.FullName).sha256"
       - uses: actions/upload-artifact@v4
         with:
-          name: Lumen-Windows-x64
-          path: Lumen-Windows-x64.zip
+          name: Lumen-Windows-installer
+          path: installer/*
           if-no-files-found: error
+      - name: Publish installer
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v=python -c "from lumen import __version__;print(__version__)"
+          $tag="v$v"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) { Write-Host 'Release exists; no overwrite'; exit 0 }
+          gh release create $tag "installer/Lumen-$v-Setup-x64.exe" "installer/Lumen-$v-Setup-x64.exe.sha256" --target $env:GITHUB_SHA --title "Lumen $v" --notes-file CHANGELOG.md
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
