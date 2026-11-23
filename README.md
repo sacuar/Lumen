@@ -12,6 +12,14 @@
 
 </div>
 
+<div align="center">
+
+[![GitHub stars](https://img.shields.io/github/stars/sacuar/Lumen?style=flat&label=Stars)](https://github.com/sacuar/Lumen/stargazers) [![Windows installer downloads](https://img.shields.io/github/downloads/sacuar/Lumen/v1.2.0/Lumen-1.2.0-Setup-x64.exe?style=flat&label=Windows%20downloads)](https://github.com/sacuar/Lumen/releases/tag/v1.2.0)
+
+[View visitors and referral sources](https://github.com/sacuar/Lumen/graphs/traffic) · [All releases](https://github.com/sacuar/Lumen/releases)
+
+</div>
+
 ## Why use Lumen?
 
 - Edit multiple files with tabs, search, replace, syntax highlighting and a command palette.
